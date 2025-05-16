@@ -1,116 +1,134 @@
-import React, { useState } from "react";
-import logo from "/logo.png";
-import OwnerForm from "./OwnerForm";
-import SchoolForm from "./SchoolForm";
-import toast, { Toaster } from "react-hot-toast";
-import type { RegisterFormData } from "../../types/form";
+import React, { useState } from 'react';
+import OwnerForm from '../Register/OwnerForm';
+import SchoolForm from '../Register/SchoolForm';
+import OtpForm from '../Register/OtpForm';
+import Dashboard from '../Dashboard/Dashboard'; // <-- Import the dashboard
+import type { RegisterFormData } from '../../types/form';
+import axios from 'axios';
 
-const RegisterForm: React.FC = () => {
+const RegistrationPage: React.FC = () => {
   const [formData, setFormData] = useState<RegisterFormData>({
-    fullName: "",
-    email: "",
-    password: "",
-    phone: "",
-    plan: "",
-    name: "",
-    city: "",
-    address: "",
-    contactNumber: "",
-    type: "",
+    fullName: '',
+    email: '',
+    phone: '',
+    password: '',
+    plan: 'free',
+    name: '',
+    city: '',
+    address: '',
+    contactNumber: '',
+    type: '',
   });
+
   const [step, setStep] = useState<number>(1);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+  const [showOtp, setShowOtp] = useState(false);
+  const [isVerified, setIsVerified] = useState(false); // <-- Add this state
 
-  function handleChange(
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ): void {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
+    setFormData(prev => ({
       ...prev,
-      [name]: value,
+      [name]: value
     }));
-  }
+  };
 
-  function handleNext(): void {
-    setStep((prev) => prev + 1);
-  }
+  const handleNext = () => setStep(2);
+  const handlePrev = () => setStep(1);
 
-  function handlePrev(): void {
-    setStep((prev) => prev - 1);
-  }
+  const handleSubmit = async () => {
+    setIsLoading(true);
+    setError(null);
 
-  function handleSubmit(): void {
-    fetch("http://localhost:5000/api/owner/register", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      credentials: "include",
-      body: JSON.stringify(formData),
-    })
-      .then((res) => {
-        if (res.status === 409) {
-          toast.error("Email already exists");
-          return;
+    try {
+      const submitData = new FormData();
+      Object.entries(formData).forEach(([key, value]) => {
+        if (key === 'profileImage' && value instanceof File) {
+          submitData.append(key, value);
+        } else if (typeof value === 'string') {
+          submitData.append(key, value);
         }
-        if (!res.ok) {
-          toast.error("Something went wrong");
-          return;
-        }
-        return res.json();
-      })
-      .then((data) => {
-        if (data && data.status === 1) {
-          toast.success("OTP send to your email please verify");
-        }
-      })
-      .catch(() => {
-        toast.error("Registration failed try again ");
       });
+
+      await axios.post(
+        'http://localhost:5000/api/owner/register',
+        submitData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        }
+      );
+      setSuccess('Registration successful!');
+      setShowOtp(true);
+      setIsLoading(false);
+
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Registration failed. Please try again.');
+      setIsLoading(false);
+    }
+  };
+
+  // Handler after OTP is verified
+  const handleOtpSuccess = () => {
+    setSuccess("Email verified successfully!");
+    setIsVerified(true); // <-- Set verified state
+  };
+
+  // Render logic
+  if (isVerified) {
+    return <Dashboard />;
   }
 
   return (
-    <div className="flex h-[105vh]">
-      <div className="flex-1 bg-green-400 pl-6">
-        <div className="flex flex-col gap-4">
-          <img src={logo} className="w-[200px]" alt="" />
-          <div className="flex  pl-4 flex-col gap-2">
-            <h3 className="text-3xl font-semibold">
-              Welcome to <br />
-              Schoolify lms 👋
-            </h3>
-            <p className="text-sm text-slate-700">
-              Kindly fill in your details below to sign in.
-            </p>
-          </div>
+    <div className="container mx-auto p-4">
+      <h1 className="text-2xl font-bold mb-4">Owner Registration</h1>
+
+      {error && (
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+          {error}
         </div>
-        <div>
+      )}
+
+      {success && (
+        <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
+          {success}
+        </div>
+      )}
+
+      {showOtp ? (
+        <OtpForm email={formData.email} onSuccess={handleOtpSuccess} />
+      ) : (
+        <>
           {step === 1 && (
             <OwnerForm
               handleNext={handleNext}
-              formData={formData}
               handleChange={handleChange}
+              formData={formData}
+              setFormData={setFormData}
             />
           )}
+
           {step === 2 && (
             <SchoolForm
               handlePrev={handlePrev}
-              formData={formData}
               handleChange={handleChange}
               handleSubmit={handleSubmit}
+              formData={formData}
             />
           )}
-        </div>
-      </div>
-      <div className="flex-1 bg-red-400">
-        <img
-          className="w-full h-full object-cover"
-          src="https://img.freepik.com/free-photo/kids-classroom-taking-english-class_23-2149402667.jpg?uid=R81763851&ga=GA1.1.1431774858.1747201417&semt=ais_hybrid&w=740"
-          alt=""
-        />
-      </div>
-      <Toaster position="top-center" reverseOrder={false} />
+
+          {isLoading && (
+            <div className="mt-4 text-center">
+              <span className="loader" /> Loading...
+            </div>
+          )}
+        </>
+      )}
     </div>
   );
 };
 
-export default RegisterForm;
+export default RegistrationPage;

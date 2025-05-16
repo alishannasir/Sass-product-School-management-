@@ -1,18 +1,40 @@
-import React from "react";
+import React, { useState } from "react";
 import type { RegisterFormData } from "../../types/form";
 
 interface OwnerFormProps {
   handleNext: () => void;
   handleChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void;
   formData: RegisterFormData;
+  setFormData: React.Dispatch<React.SetStateAction<RegisterFormData>>;
 }
 
-const OwnerForm: React.FC<OwnerFormProps> = ({ handleNext, handleChange, formData }) => {
+const OwnerForm: React.FC<OwnerFormProps> = ({ 
+  handleNext, 
+  handleChange, 
+  formData,
+  setFormData 
+}) => {
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Create a preview URL for the UI
+      const fileUrl = URL.createObjectURL(file);
+      setPreviewImage(fileUrl);
+      
+      // Update the form data with the file
+      setFormData(prev => ({
+        ...prev,
+        profileImage: file
+      }));
+    }
+  };
+
   return (
-    <div className=" p-4 flex flex-col gap-3 text-white">
+    <div className="p-4 flex flex-col gap-3 text-white">
       <div className="fullName">
         <label className="input validator">
-          {/* ...existing SVG... */}
           <input
             type="text"
             name="fullName"
@@ -25,7 +47,6 @@ const OwnerForm: React.FC<OwnerFormProps> = ({ handleNext, handleChange, formDat
       </div>
       <div className="email">
         <label className="input validator">
-          {/* ...existing SVG... */}
           <input
             type="email"
             value={formData.email}
@@ -39,7 +60,6 @@ const OwnerForm: React.FC<OwnerFormProps> = ({ handleNext, handleChange, formDat
       </div>
       <div className="phone">
         <label className="input validator">
-          {/* ...existing SVG... */}
           <input
             type="tel"
             className="tabular-nums"
@@ -53,7 +73,6 @@ const OwnerForm: React.FC<OwnerFormProps> = ({ handleNext, handleChange, formDat
       </div>
       <div className="password">
         <label className="input validator">
-          {/* ...existing SVG... */}
           <input
             type="password"
             required
@@ -64,6 +83,27 @@ const OwnerForm: React.FC<OwnerFormProps> = ({ handleNext, handleChange, formDat
           />
         </label>
       </div>
+      
+      {/* Profile Image Upload */}
+      <div className="profile-image text-black">
+        <label className="block mb-2">Profile Image</label>
+        <input
+          type="file"
+          accept="image/*"
+          onChange={handleFileChange}
+          className="w-full"
+        />
+        {previewImage && (
+          <div className="mt-2">
+            <img 
+              src={previewImage} 
+              alt="Profile Preview" 
+              className="w-24 h-24 object-cover rounded-full"
+            />
+          </div>
+        )}
+      </div>
+
       <div className="plan">
         <select
           name="plan"

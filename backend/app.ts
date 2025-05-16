@@ -1,17 +1,25 @@
+// Fixed app.ts file
 import cookieParser from "cookie-parser";
 import express from "express";
 import cors from "cors";
+import path from "path";
+import { fileURLToPath } from "url";
 import { CorsOptions } from "./src/types/corsOptions.types.js";
 
-const app = express();
+// Create __dirname equivalent for ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename); // Fixed double underscore
 
-// middlewares implement
+const app = express();
+const PORT = process.env.PORT || 5000;
+
+// Middlewares
 // json <in build global middleware>
 app.use(express.json());
-
 // urlencoded <inbuild middleware>
 app.use(express.urlencoded({ extended: true }));
 
+// CORS configuration
 const whiteList: String[] = ["http://localhost:5173", "http://localhost:5174"];
 const corsOptions: CorsOptions = {
     origin: function (origin, cb) {
@@ -24,19 +32,22 @@ const corsOptions: CorsOptions = {
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE"],
 };
-
 app.use(cors(corsOptions));
 
-// cookie parser  <third party middleware global >
+// Cookie parser <third party middleware global>
 app.use(cookieParser());
 
-// ouner route setup
+// Serve static files from the uploads directory
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
 import ownerRouter from "./src/routes/owner/owner.js";
 app.use("/api/owner", ownerRouter);
+// import verifyRouter from "./src/routes/verify-otp/verify-otp.js";
+// app.use("/api", verifyRouter);
 
-// error middleware
+// Error middleware
 import errorMiddleware from "./src/middleware/error.middleware.js";
 app.use(errorMiddleware);
 
-// export app
+// Export app
 export default app;

@@ -4,6 +4,7 @@ export interface OwnerFormData {
   password: string;
   phone: string;
   plan: string;
+  profileImage?: File; // Add this for the profile image
 }
 
 export interface SchoolFormData {
@@ -13,5 +14,8 @@ export interface SchoolFormData {
   contactNumber: string;
   type: string;
 }
-
+ export interface OtpFormProps {
+  email: string;
+  onSuccess: () => void;
+}
 export interface RegisterFormData extends OwnerFormData, SchoolFormData {}
