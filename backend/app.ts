@@ -20,7 +20,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // CORS configuration
-const whiteList: String[] = ["http://localhost:5173", "http://localhost:5174"];
+const whiteList: String[] = ["http://localhost:5173", "http://localhost:8080"];
 const corsOptions: CorsOptions = {
     origin: function (origin, cb) {
         if (whiteList.includes(origin!) || !origin) {

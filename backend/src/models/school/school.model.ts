@@ -15,7 +15,6 @@ const schoolSchema = new Schema<ISchool>(
     {
         name: {
             type: String,
-            required: true,
         },
         city: {
             type: String,
