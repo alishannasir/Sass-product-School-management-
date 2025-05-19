@@ -71,7 +71,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     Object.entries(userData).forEach(([key, value]) => {
       if (value !== undefined) formData.append(key, value as any);
     });
-    const response = await fetch("/api/auth/register", {
+    const response = await fetch("http://localhost:5000/api/owner/register", {
       method: "POST",
       body: formData,
     });
@@ -90,14 +90,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 };
 
 
+
   const logout = () => {
     setUser(null);
     toast.info("You have been logged out.");
   };
 
-  const sendOTP = async (email: string): Promise<boolean> => {
+const sendOTP = async (email: string): Promise<boolean> => {
   try {
-    const response = await fetch("/api/auth/send-otp", {
+    const response = await fetch("http://localhost:5000/api/owner/resend-otp", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email }),
@@ -118,7 +119,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const verifyOTP = async (email: string, otp: string): Promise<boolean> => {
   try {
-    const response = await fetch("/api/auth/verify-otp", {
+    const response = await fetch("http://localhost:5000/api/owner/verify-otp", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, otp }),
