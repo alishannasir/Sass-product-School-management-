@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/form";
 import { useAuth } from "@/hooks/useAuth";
 
+
 const loginSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
   password: z.string().min(1, "Password is required"),
@@ -24,7 +25,6 @@ const loginSchema = z.object({
 type LoginFormValues = z.infer<typeof loginSchema>;
 
 const Login = () => {
-  const navigate = useNavigate();
   const { login } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
 
@@ -37,15 +37,12 @@ const Login = () => {
   });
 
   const onSubmit = async (values: LoginFormValues) => {
-    setIsLoading(true);
-    try {
-      const success = await login(values.email, values.password);
-      if (success) {
-        navigate("/dashboard");
-      }
-    } finally {
-      setIsLoading(false);
-    }
+  setIsLoading(true);
+  try {
+    await login(values.email, values.password);
+  } finally {
+    setIsLoading(false);
+  }
   };
 
   return (

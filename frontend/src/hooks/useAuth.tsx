@@ -1,5 +1,8 @@
 import { createContext, useContext, useState, ReactNode } from "react";
 import { toast } from "sonner";
+import Cookies from "js-cookie";
+import { useNavigate } from "react-router-dom";
+
 
 interface User {
   id: string;
@@ -31,40 +34,73 @@ export interface RegistrationData {
   contactNumber: string;
   type: string;
 }
-
+ const getUserFromCookie = () => {
+  const userCookie = Cookies.get("user");
+  return userCookie ? JSON.parse(userCookie) : null;
+};
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<User | null>(getUserFromCookie());
+  const navigate = useNavigate();
+  console.log("User:", user);
 
- const login = async (email: string, password: string): Promise<boolean> => {
+
+const login = async (
+  email: string,
+  password: string
+): Promise<boolean> => {
   try {
-    const response = await fetch("/api/auth/login", {
+    const response = await fetch("http://localhost:5000/api/owner/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),
     });
-    if (!response.ok) {
-      const errorData = await response.json();
-      toast.error(errorData.message || "Invalid email or password");
+
+    if (response.status === 403) {
+      await sendOTP(email);
+      toast.info("Your email is not verified.New OTP sent to your email.");
+      navigate("/verify", { state: { email } });
       return false;
     }
+    if (!response.ok) {
+      const errorData = await response.json();
+      toast.error(errorData.message || "Login failed");
+      return false;
+    }
+
     const data = await response.json();
-    setUser({
-      id: data.id,
-      email: data.email,
-      fullName: data.fullName,
-      profile: data.profile,
+    Cookies.set("user", JSON.stringify({
+      id: data.user.id,
+      fullName: data.user.fullName,
+      email: data.user.email,
+      profile: data.user.profile,
+      plan: data.user.plan,
+    }), { expires: 7 });
+    window.dispatchEvent(new Event("userCookieChanged"));
+    
+      
+     setUser({
+      id: data.user.id,
+      fullName: data.user.fullName,
+      email: data.user.email,
+      profile: data.user.profile,
     });
     toast.success("Login successful!");
+
+    navigate("/dashboard");
     return true;
   } catch (error) {
-    console.error("Login error:", error);
     toast.error("Failed to login. Please try again.");
     return false;
-    }
-  };
+  }
+};
 
+
+  console.log("Is Authenticated:", !!user);
+
+
+  // register Owner
  const register = async (userData: RegistrationData): Promise<boolean> => {
   try {
     const formData = new FormData();
@@ -92,8 +128,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
 
   const logout = () => {
-    setUser(null);
-    toast.info("You have been logged out.");
+    Cookies.remove("user");
+    Cookies.remove("token");
+    window.dispatchEvent(new Event("userCookieChanged"));
   };
 
 const sendOTP = async (email: string): Promise<boolean> => {
@@ -137,6 +174,7 @@ const sendOTP = async (email: string): Promise<boolean> => {
     return false;
   }
 };
+ 
   return (
     <AuthContext.Provider
       value={{

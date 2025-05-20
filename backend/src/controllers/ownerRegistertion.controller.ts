@@ -9,7 +9,7 @@ import Otp from "../models/otp/otp.model.js";
 import SendEmail from "../utils/SendEmail.js";
 import cleanOtp from "../helper/CleanOtp.js";
 import AsyncHandler from "../utils/AsyncHandler.js";
-
+import {uploadBufferToCloudinary} from '../helper/BufferCloudinary.js';
 
 export const registerOwner = AsyncHandler(async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -33,13 +33,13 @@ export const registerOwner = AsyncHandler(async (req: Request, res: Response, ne
     }
 
     // Handle profile image
-    let profileUrl = undefined;
+   let profileUrl = undefined;
     if (req.file) {
-      const protocol = req.protocol;
-      const host = req.get('host');
-      profileUrl = `${protocol}://${host}/uploads/${req.file.filename}`;
+      profileUrl = await uploadBufferToCloudinary(req.file.buffer, 'owners');
     }
-
+    if (!profileUrl) {
+      return next(new CustomError("Profile image upload failed", 422, { attemptedEmail: email }));
+    }
     // Create the new owner
     const owner = await Owner.create({
       fullName,

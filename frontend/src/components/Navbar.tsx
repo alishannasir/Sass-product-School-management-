@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -8,10 +9,19 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/hooks/useAuth";
+import { getUserFromCookie } from "@/helper/getUserFromCookie";
+
 
 export default function Navbar() {
-  const { user, isAuthenticated, logout } = useAuth();
+  const {logout } = useAuth();
+  const [user, setUser] = useState(getUserFromCookie());
+  const isAuthenticated = !!user;
 
+     useEffect(() => {
+    const handleCookieChange = () => setUser(getUserFromCookie());
+    window.addEventListener("userCookieChanged", handleCookieChange);
+    return () => window.removeEventListener("userCookieChanged", handleCookieChange);
+  }, []);
   return (
     <nav className="bg-white shadow-sm py-4">
       <div className="container mx-auto px-4 flex justify-between items-center">
