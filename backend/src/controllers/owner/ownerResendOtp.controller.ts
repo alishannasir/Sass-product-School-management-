@@ -1,11 +1,11 @@
 import { Request, Response, NextFunction } from 'express';
-import GenerateOTP from "../utils/GenerateOtp.js";
-import SendEmail from "../utils/SendEmail.js";
-import emailHtmlTemplate from "../utils/EmailHTMLTemplate.js";
-import Otp from "../models/otp/otp.model.js";
-import Owner from "../models/owner/owner.model.js";
-import CustomError from "../utils/CustomError.js";
-import AsyncHandler from "../utils/AsyncHandler.js";
+import GenerateOTP from "../../utils/GenerateOtp.js";
+import SendEmail from "../../utils/SendEmail.js";
+import emailHtmlTemplate from "../../utils/EmailHTMLTemplate.js";
+import Otp from "../../models/otp/otp.model.js";
+import Owner from "../../models/owner/owner.model.js";
+import CustomError from "../../utils/CustomError.js";
+import AsyncHandler from "../../utils/AsyncHandler.js";
 
 
 export const resendOtp = AsyncHandler(async (req: Request, res: Response, next: NextFunction) => {

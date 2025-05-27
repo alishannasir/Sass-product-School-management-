@@ -1,15 +1,15 @@
 import { Request, Response, NextFunction } from 'express';
-import Owner from '../models/owner/owner.model.js';
-import upload from '../config/Multer.config.js';
-import School from '../models/school/school.model.js';
-import CustomError from '../utils/CustomError.js';
-import emailHtmlTemplate from "../utils/EmailHTMLTemplate.js";
-import GenerateOTP from "../utils/GenerateOtp.js";
-import Otp from "../models/otp/otp.model.js";
-import SendEmail from "../utils/SendEmail.js";
-import cleanOtp from "../helper/CleanOtp.js";
-import AsyncHandler from "../utils/AsyncHandler.js";
-import {uploadBufferToCloudinary} from '../helper/BufferCloudinary.js';
+import Owner from '../../models/owner/owner.model.js';
+import upload from '../../config/Multer.config.js';
+import School from '../../models/school/school.model.js';
+import CustomError from '../../utils/CustomError.js';
+import emailHtmlTemplate from "../../utils/EmailHTMLTemplate.js";
+import GenerateOTP from "../../utils/GenerateOtp.js";
+import Otp from "../../models/otp/otp.model.js";
+import SendEmail from "../../utils/SendEmail.js";
+import cleanOtp from "../../helper/CleanOtp.js";
+import AsyncHandler from "../../utils/AsyncHandler.js";
+import {uploadBufferToCloudinary} from '../../helper/BufferCloudinary.js';
 
 export const registerOwner = AsyncHandler(async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -24,6 +24,7 @@ export const registerOwner = AsyncHandler(async (req: Request, res: Response, ne
       address,
       contactNumber,
       type,
+      role
     } = req.body;
 
     // Check if owner already exists
@@ -48,6 +49,7 @@ export const registerOwner = AsyncHandler(async (req: Request, res: Response, ne
       password,
       profile: profileUrl,
       plan: plan || 'free',
+      role
     });
 
     if (!owner) {
@@ -61,7 +63,7 @@ export const registerOwner = AsyncHandler(async (req: Request, res: Response, ne
       address,
       contactNumber,
       type,
-      owner: owner._id
+      owner: owner._id,
     });
 
     if (!school) {
@@ -69,8 +71,7 @@ export const registerOwner = AsyncHandler(async (req: Request, res: Response, ne
     }
 
     // Clean old OTPs for this owner
-    await cleanOtp(owner._id);
-
+await cleanOtp(owner._id, owner.role);
     // Generate OTP
     const ownerOtp = GenerateOTP();
 
@@ -104,7 +105,8 @@ export const registerOwner = AsyncHandler(async (req: Request, res: Response, ne
         email: owner.email,
         phone: owner.phone,
         profile: owner.profile,
-        plan: owner.plan
+        plan: owner.plan,
+        role: owner.role,
       },
       school: {
         _id: school._id,

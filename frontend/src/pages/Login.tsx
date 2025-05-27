@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -15,7 +15,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { useAuth } from "@/hooks/useAuth";
-
+import { useRole } from "@/hooks/useRoleContext";
 
 const loginSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -26,7 +26,19 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 
 const Login = () => {
   const { login } = useAuth();
+   const { role } = useRole();
   const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
+   
+
+   useEffect(() => {
+    if (!role) {
+      navigate("/role-select");
+    }
+  }, [role, navigate]);
+
+
+
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -39,7 +51,7 @@ const Login = () => {
   const onSubmit = async (values: LoginFormValues) => {
   setIsLoading(true);
   try {
-    await login(values.email, values.password);
+    await login(values.email, values.password,role);
   } finally {
     setIsLoading(false);
   }

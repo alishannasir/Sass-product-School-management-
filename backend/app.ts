@@ -42,9 +42,12 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 import ownerRouter from "./src/routes/owner/owner.js";
 app.use("/api/owner", ownerRouter);
-// import verifyRouter from "./src/routes/verify-otp/verify-otp.js";
-// app.use("/api", verifyRouter);
-
+import teacherRouter from "./src/routes/teacher/teacher.js";
+app.use("/api/teacher", teacherRouter);
+import selectionRole from "./src/routes/roleSelection.js"
+app.use("/api/", selectionRole);
+import studentRouter from "./src/routes/student/student.js";
+app.use("/api/student", studentRouter);
 // Error middleware
 import errorMiddleware from "./src/middleware/error.middleware.js";
 app.use(errorMiddleware);

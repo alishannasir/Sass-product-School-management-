@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom"; 
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/useAuth";
-
+import { useRole } from "@/hooks/useRoleContext"; 
 
 const otpSchema = z.object({
   otp: z.string().length(6, "OTP must be exactly 6 digits"),
@@ -24,7 +24,7 @@ type OTPFormValues = z.infer<typeof otpSchema>;
 
 const OTPVerification = () => {
   const navigate = useNavigate();
-  const location = useLocation();
+   const location = useLocation();
   const { verifyOTP, sendOTP } = useAuth();
   const [countdown, setCountdown] = useState(60);
   const [isResendDisabled, setIsResendDisabled] = useState(true);
@@ -32,7 +32,8 @@ const OTPVerification = () => {
   const [email, setEmail] = useState("");
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-
+  const { role: contextRole } = useRole();
+  const role = location.state?.role || contextRole;
   const form = useForm<OTPFormValues>({
     resolver: zodResolver(otpSchema),
     defaultValues: {
@@ -80,10 +81,10 @@ const OTPVerification = () => {
     }, 1000);
   };
 
-  const handleResendOTP = async () => {
+   const handleResendOTP = async () => {
     setIsLoading(true);
     try {
-      await sendOTP(email);
+      await sendOTP(email, role); // Pass role here
       startCountdown();
     } finally {
       setIsLoading(false);
@@ -94,7 +95,7 @@ const OTPVerification = () => {
     setIsLoading(true);
     setSuccess(null);
     try {
-      const success = await verifyOTP(email, values.otp);
+      const success = await verifyOTP(email, values.otp, role); // Pass role here
       if (success) {
         setSuccess("OTP verified successfully!");
         navigate("/login");
@@ -105,7 +106,6 @@ const OTPVerification = () => {
       setIsLoading(false);
     }
   };
-
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
@@ -151,13 +151,13 @@ const OTPVerification = () => {
                   Resend in <span className="font-medium">{countdown}s</span>
                 </span>
               ) : (
-                <button
+                <Button
                   onClick={handleResendOTP}
                   className="text-primary font-medium hover:text-primary-focus"
                   disabled={isLoading}
                 >
                   Resend OTP
-                </button>
+                </Button>
               )}
             </p>
           </div>

@@ -11,6 +11,7 @@ export interface IOwner extends Document {
     isDeleted: boolean;
     isBlocked: boolean;
     plan: string;
+    role: string;
 }
 
 const ownerSchema = new Schema<IOwner>(
@@ -24,6 +25,11 @@ const ownerSchema = new Schema<IOwner>(
         isDeleted: { type: Boolean, default: false },
         isBlocked: { type: Boolean, default: false },
         plan: { type: String, default: "free" },
+        role: {
+            type: String,
+            enum: ['Teacher', 'Owner', 'Student', 'Parent'],
+            required: true
+           }
     },
     { timestamps: true }
 );

@@ -1,12 +1,13 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import {  useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import { OwnerRegistrationForm, type OwnerFormValues } from "@/components/OwnerRegistrationForm";
 import { SchoolDetailsForm, type SchoolFormValues } from "@/components/SchoolDetailsForm";
 import { useAuth, type RegistrationData } from "@/hooks/useAuth";
 import axios from "axios";
+import { useRole } from "@/hooks/useRoleContext";
 
-const Registration = () => {
+const OwnerRegistration = () => {
   const navigate = useNavigate();
   const { sendOTP } = useAuth();
   const [step, setStep] = useState(1);
@@ -14,6 +15,9 @@ const Registration = () => {
   const [profileImage, setProfileImage] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+   const { role } = useRole();
+
 
   const handleOwnerFormSubmit = (data: OwnerFormValues & { profileImage?: File | null }) => {
     setFormData({ ...formData, ...data });
@@ -49,7 +53,11 @@ const Registration = () => {
           submitData.append(key, value);
         }
       });
-
+         
+       // Append role to FormData
+  if (role) {
+        submitData.append("role", role);
+      }
       // Replace with your backend endpoint
       await axios.post(
         "http://localhost:5000/api/owner/register",
@@ -62,7 +70,7 @@ const Registration = () => {
       );
 
       await sendOTP(completeData.email);
-      navigate("/verify", { state: { email: completeData.email } });
+      navigate("/verify", { state: { email: completeData.email ,role} });
     } catch (err: any) {
       setError(err.response?.data?.message || "Registration failed. Please try again.");
     } finally {
@@ -108,4 +116,4 @@ const Registration = () => {
   );
 };
 
-export default Registration;
+export default OwnerRegistration;

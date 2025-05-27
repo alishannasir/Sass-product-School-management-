@@ -1,8 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
-import Otp from "../models/otp/otp.model.js";
-import Owner from "../models/owner/owner.model.js";
-import CustomError from "../utils/CustomError.js";
-import AsyncHandler from "../utils/AsyncHandler.js";
+import Otp from "../../models/otp/otp.model.js";
+import Owner from "../../models/owner/owner.model.js";
+import CustomError from "../../utils/CustomError.js";
+import AsyncHandler from "../../utils/AsyncHandler.js";
 
 
 export const verifyOtp = AsyncHandler(async (req: Request, res: Response, next: NextFunction) => {

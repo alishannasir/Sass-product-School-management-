@@ -14,11 +14,11 @@ interface User {
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
-  login: (email: string, password: string) => Promise<boolean>;
+  login: (email: string, password: string, role?:string) => Promise<boolean>;
   register: (userData: RegistrationData) => Promise<boolean>;
   logout: () => void;
-  sendOTP: (email: string) => Promise<boolean>;
-  verifyOTP: (email: string, otp: string) => Promise<boolean>;
+  sendOTP: (email: string, role?: string) => Promise<boolean>; // <-- updated
+  verifyOTP: (email: string, otp: string, role?: string) => Promise<boolean>; // <-- updated
 }
 
 export interface RegistrationData {
@@ -34,10 +34,52 @@ export interface RegistrationData {
   contactNumber: string;
   type: string;
 }
+
+
+const getOtpEndpoints = (role?: string) => {
+  switch ((role || "").toLowerCase()) {
+    case "teacher":
+      return {
+        resend: "http://localhost:5000/api/teacher/resend-otp",
+        verify: "http://localhost:5000/api/teacher/verify-otp",
+      };
+    case "student":
+      return {
+        resend: "http://localhost:5000/api/student/resend-otp",
+        verify: "http://localhost:5000/api/student/verify-otp",
+      };
+    case "parent":
+      return {
+        resend: "http://localhost:5000/api/parent/resend-otp",
+        verify: "http://localhost:5000/api/parent/verify-otp",
+      };
+    default:
+      return {
+        resend: "http://localhost:5000/api/owner/resend-otp",
+        verify: "http://localhost:5000/api/owner/verify-otp",
+      };
+  }
+};
+
+const getLoginEndpoint = (role?: string) => {
+  switch ((role || "").toLowerCase()) {
+    case "teacher":
+      return "http://localhost:5000/api/teacher/login";
+    case "student":
+      return "http://localhost:5000/api/student/login";
+    case "parent":
+      return "http://localhost:5000/api/parent/login";
+    default:
+      return "http://localhost:5000/api/owner/login";
+  }
+}
+
+
  const getUserFromCookie = () => {
   const userCookie = Cookies.get("user");
   return userCookie ? JSON.parse(userCookie) : null;
 };
+
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
@@ -46,21 +88,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   console.log("User:", user);
 
 
+
 const login = async (
   email: string,
-  password: string
+  password: string,
+  role?: string // <-- add role param
 ): Promise<boolean> => {
   try {
-    const response = await fetch("http://localhost:5000/api/owner/login", {
+    const endpoint = getLoginEndpoint(role);
+    const response = await fetch(endpoint, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ email, password, role }), // <-- send role in body
     });
 
     if (response.status === 403) {
-      await sendOTP(email);
-      toast.info("Your email is not verified.New OTP sent to your email.");
-      navigate("/verify", { state: { email } });
+      await sendOTP(email, role);
+      toast.info("Your email is not verified. New OTP sent to your email.");
+      navigate("/verify", { state: { email, role } });
       return false;
     }
     if (!response.ok) {
@@ -76,11 +121,11 @@ const login = async (
       email: data.user.email,
       profile: data.user.profile,
       plan: data.user.plan,
+      role: data.user.role, // <-- use returned role, not the selected one
     }), { expires: 7 });
     window.dispatchEvent(new Event("userCookieChanged"));
-    
-      
-     setUser({
+
+    setUser({
       id: data.user.id,
       fullName: data.user.fullName,
       email: data.user.email,
@@ -88,15 +133,24 @@ const login = async (
     });
     toast.success("Login successful!");
 
-    navigate("/dashboard");
+    // Use the returned role for navigation
+    if (data.user.role === "Owner") {
+      navigate("/dashboard-owner");
+    } else if (data.user.role === "Teacher") {
+      navigate("/dashboard-teacher");
+    } else if (data.user.role === "Student") {
+      navigate("/dashboard/student");
+    } else if (data.user.role === "Parent") {
+      navigate("/dashboard/parent");
+    } else {
+      navigate("/dashboard");
+    }
     return true;
   } catch (error) {
     toast.error("Failed to login. Please try again.");
     return false;
   }
 };
-
-
   console.log("Is Authenticated:", !!user);
 
 
@@ -133,9 +187,10 @@ const login = async (
     window.dispatchEvent(new Event("userCookieChanged"));
   };
 
-const sendOTP = async (email: string): Promise<boolean> => {
+const sendOTP = async (email: string, role?: string): Promise<boolean> => {
   try {
-    const response = await fetch("http://localhost:5000/api/owner/resend-otp", {
+    const { resend } = getOtpEndpoints(role);
+    const response = await fetch(resend, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email }),
@@ -154,9 +209,10 @@ const sendOTP = async (email: string): Promise<boolean> => {
   }
 };
 
-  const verifyOTP = async (email: string, otp: string): Promise<boolean> => {
+ const verifyOTP = async (email: string, otp: string, role?: string): Promise<boolean> => {
   try {
-    const response = await fetch("http://localhost:5000/api/owner/verify-otp", {
+    const { verify } = getOtpEndpoints(role);
+    const response = await fetch(verify, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, otp }),
