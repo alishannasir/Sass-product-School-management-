@@ -5,10 +5,10 @@
   "main": "dist/server.js",
   "type": "module",
   "scripts": {
-    "build": "tsc",
-    "start": "node dist/server.js",
-    "dev": "node --loader ts-node/esm server.ts",
-    "dev:watch": "nodemon --watch './**/*.ts' --ext 'ts' --exec 'node --loader ts-node/esm server.ts'",
+    "build": "node api.js && tsc",
+    "start": "node api.js && node dist/server.js",
+    "dev": "node api.js && node --loader ts-node/esm server.ts",
+    "dev:watch": "node api.js && nodemon --watch './**/*.ts' --ext 'ts' --exec 'node --loader ts-node/esm server.ts'",
     "clean": "rimraf dist"
   },
   "dependencies": {

@@ -1,21 +1,8 @@
-import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import Navbar from "@/components/Navbar";
 import { useAuth } from "@/hooks/useAuth";
+import Navbar from "@/components/Navbar";
 
 const Dashboard = () => {
-  const navigate = useNavigate();
-  const { isAuthenticated, user } = useAuth();
-
-  useEffect(() => {
-    if (!isAuthenticated) {
-      navigate("/login");
-    }
-  }, [isAuthenticated, navigate]);
-
-  if (!isAuthenticated) {
-    return null; // Prevent rendering while redirecting
-  }
+  const { user } = useAuth();
 
   return (
     <div className="min-h-screen flex flex-col">

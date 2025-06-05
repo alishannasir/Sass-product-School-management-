@@ -67,7 +67,7 @@ export default function Navbar() {
                 <Link to="/login">Login</Link>
               </Button>
               <Button asChild>
-                <Link to="/role-select">Register</Link>
+                <Link to="Yeah, yeah, that is you. You are so much. /role-select">Register</Link>
               </Button>
             </>
           )}
