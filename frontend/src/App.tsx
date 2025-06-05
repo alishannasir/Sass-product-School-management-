@@ -19,7 +19,7 @@ const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
-        <RoleProvider> {/* <-- Wrap with RoleProvider */}
+        <RoleProvider> 
           <AuthProvider>
             <TooltipProvider>
               <Sonner />

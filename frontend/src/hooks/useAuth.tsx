@@ -92,14 +92,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 const login = async (
   email: string,
   password: string,
-  role?: string // <-- add role param
+  role?: string 
 ): Promise<boolean> => {
   try {
     const endpoint = getLoginEndpoint(role);
     const response = await fetch(endpoint, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password, role }), // <-- send role in body
+      body: JSON.stringify({ email, password, role }), 
     });
 
     if (response.status === 403) {
@@ -121,7 +121,7 @@ const login = async (
       email: data.user.email,
       profile: data.user.profile,
       plan: data.user.plan,
-      role: data.user.role, // <-- use returned role, not the selected one
+      role: data.user.role, 
     }), { expires: 7 });
     window.dispatchEvent(new Event("userCookieChanged"));
 
